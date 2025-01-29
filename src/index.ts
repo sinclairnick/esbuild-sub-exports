@@ -70,10 +70,18 @@ export const subExports = (opts: SubExportsOptions = {}): Plugin => {
           const cjsPath = `${outdir}/${name}.js`;
           const mjsPath = `${outdir}/${name}.mjs`;
           const dtsPath = `${outdir}/${name}.d.ts`;
+          const rootCjsPath = `./${name}.js`;
+          const rootDtsPath = `./${name}.d.ts`;
 
-          files.push(mjsPath);
-          files.push(cjsPath);
-          files.push(dtsPath);
+          for (const file of [
+            cjsPath,
+            dtsPath,
+            mjsPath,
+            rootCjsPath,
+            rootDtsPath,
+          ]) {
+            files.push(file);
+          }
 
           _exports[`./${name}`] = {
             types: toRelative(dtsPath),
@@ -82,11 +90,11 @@ export const subExports = (opts: SubExportsOptions = {}): Plugin => {
           };
 
           fs.writeFile(
-            `./${name}.js`,
+            rootCjsPath,
             `module.exports = require("${toRelative(cjsPath)}");`
           );
           fs.writeFile(
-            `./${name}.d.ts`,
+            rootDtsPath,
             `export type * from "${toRelative(dtsPath)}";`
           );
         }
