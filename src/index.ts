@@ -96,6 +96,11 @@ export const subExports = (opts: SubExportsOptions = {}): Plugin => {
           resolvePackageJSON(),
         ]);
 
+        if (pkg == null) {
+          console.warn("Subexports: Could not find package JSON");
+          return;
+        }
+
         const hasChanged =
           JSON.stringify({
             files: pkg.files,
