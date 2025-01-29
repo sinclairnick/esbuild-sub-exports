@@ -60,7 +60,7 @@ export const subExports = (opts: SubExportsOptions = {}): Plugin => {
 
         const files: string[] = [];
 
-        for (const name in entries) {
+        for (const name of entries) {
           const cjsPath = `${outdir}/${name}.js`;
           const dtsPath = `${outdir}/${name}.d.ts`;
           files.push(`${outdir}/${name}.mjs`);
