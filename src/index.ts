@@ -83,9 +83,12 @@ export const subExports = (opts: SubExportsOptions = {}): Plugin => {
 
           fs.writeFile(
             `./${name}.js`,
-            `module.exports = require("${cjsPath}");`
+            `module.exports = require("${toRelative(cjsPath)}");`
           );
-          fs.writeFile(`./${name}.d.ts`, `export type * from "${dtsPath}";`);
+          fs.writeFile(
+            `./${name}.d.ts`,
+            `export type * from "${toRelative(dtsPath)}";`
+          );
         }
 
         const [pkg, pkgPath] = await Promise.all([
