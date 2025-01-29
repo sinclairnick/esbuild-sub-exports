@@ -1,7 +1,10 @@
 import type { Plugin } from "esbuild";
-import fs, { readFile } from "node:fs/promises";
-import path from "node:path";
-import { PackageJson } from "pkg-types";
+import fs from "node:fs/promises";
+import {
+  resolvePackageJSON,
+  writePackageJSON,
+  readPackageJSON,
+} from "pkg-types";
 
 function isRecordEntry(
   entry: unknown
@@ -80,25 +83,30 @@ export const subExports = (opts: SubExportsOptions = {}): Plugin => {
           fs.writeFile(`./${name}.d.ts`, `export * from "${dtsPath}";`);
         }
 
-        const pkgPath = path.join(process.cwd(), "package.json");
+        const [pkg, pkgPath] = await Promise.all([
+          readPackageJSON(),
+          resolvePackageJSON(),
+        ]);
 
-        const pkg: PackageJson = await readFile(pkgPath);
+        const hasChanged =
+          JSON.stringify({
+            files: pkg.files,
+            exports: pkg.exports,
+          }) !==
+          JSON.stringify({
+            files,
+            exports: _exports,
+          });
 
-        const oldPkgStr = JSON.stringify(pkg, null, 2);
-
-        const newPkg = {
-          ...pkg,
-          files: Array.from(new Set([...(pkg.files ?? []), ...files])),
-          exports: {
-            ...(isRecord(pkg.exports) ? pkg.exports : {}),
-            ..._exports,
-          },
-        };
-
-        const newPkgStr = JSON.stringify(newPkg, null, 2);
-
-        if (oldPkgStr !== newPkgStr) {
-          await fs.writeFile("./package.json", newPkgStr);
+        if (hasChanged) {
+          await writePackageJSON(pkgPath, {
+            ...pkg,
+            files: Array.from(new Set([...(pkg.files ?? []), ...files])),
+            exports: {
+              ...(isRecord(pkg.exports) ? pkg.exports : {}),
+              ..._exports,
+            },
+          });
         }
       });
     },
