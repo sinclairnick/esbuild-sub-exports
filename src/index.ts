@@ -32,6 +32,9 @@ const hasOutDir = (outdir?: string) => {
   }
 };
 
+const toRelative = (path: string) =>
+  path.startsWith("./") ? path : "./" + path;
+
 export type SubExportsOptions = {
   /**
    * An optional whitelist of entries, by name (key in entry object)
@@ -65,22 +68,24 @@ export const subExports = (opts: SubExportsOptions = {}): Plugin => {
 
         for (const name of entries) {
           const cjsPath = `${outdir}/${name}.js`;
+          const mjsPath = `${outdir}/${name}.mjs`;
           const dtsPath = `${outdir}/${name}.d.ts`;
-          files.push(`${outdir}/${name}.mjs`);
+
+          files.push(mjsPath);
           files.push(cjsPath);
           files.push(dtsPath);
 
           _exports[`./${name}`] = {
-            types: dtsPath,
-            import: `./dist/${name}.mjs`,
-            require: cjsPath,
+            types: toRelative(dtsPath),
+            import: toRelative(mjsPath),
+            require: toRelative(cjsPath),
           };
 
           fs.writeFile(
             `./${name}.js`,
             `module.exports = require("${cjsPath}");`
           );
-          fs.writeFile(`./${name}.d.ts`, `export * from "${dtsPath}";`);
+          fs.writeFile(`./${name}.d.ts`, `export type * from "${dtsPath}";`);
         }
 
         const [pkg, pkgPath] = await Promise.all([
